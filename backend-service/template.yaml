@@ -2,32 +2,27 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: fastapi-template
-  title: FastAPI Service Template
-  description: Template que gera uma aplicação básica FastAPI
+  title: FastAPI Service
+  description: Template mínimo para criar serviço FastAPI
 spec:
-  owner: group:devs
+  owner: group:devs        # proprietário fixo, sem parâmetro
   type: service
 
   parameters:
     - title: Informações básicas
       required:
         - name
-        - owner
       properties:
         name:
           title: Nome da aplicação
           type: string
-        owner:
-          title: Dono da aplicação
-          type: string
-          description: "Grupo ou usuário responsável (ex: `group:devs`)"
 
-    - title: Repositório GitHub
+    - title: Repositório
       required:
         - repoUrl
       properties:
         repoUrl:
-          title: Local do repositório
+          title: Repo GitHub
           type: string
           ui:field: RepoUrlPicker
           ui:options:
@@ -35,35 +30,34 @@ spec:
               - github.com
 
   steps:
-    - id: fetch-base
-      name: Fetch Template
+    - id: fetch
+      name: Baixar estrutura
       action: fetch:template
       input:
         url: ./content
         values:
           name: ${{ parameters.name }}
-          owner: ${{ parameters.owner }}
 
     - id: publish
-      name: Publicar no GitHub
+      name: Publicar GitHub
       action: publish:github
       input:
         allowedHosts: ['github.com']
-        description: Projeto FastAPI gerado automaticamente
+        description: Serviço FastAPI ${{ parameters.name }}
         repoUrl: ${{ parameters.repoUrl }}
         defaultBranch: main
 
     - id: register
-      name: Registrar no catálogo
+      name: Registrar catálogo
       action: catalog:register
       input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
         catalogInfoPath: /catalog-info.yaml
 
   output:
     links:
-      - title: Repositório
-        url: ${{ steps['publish'].output.remoteUrl }}
-      - title: Abrir no catálogo
+      - title: Ver repositório
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Ver no catálogo
         icon: catalog
-        entityRef: ${{ steps['register'].output.entityRef }}
+        entityRef: ${{ steps.register.output.entityRef }}
