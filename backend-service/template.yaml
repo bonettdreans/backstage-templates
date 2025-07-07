@@ -20,7 +20,7 @@ spec:
         owner:
           title: Dono da aplicação
           type: string
-          description: Grupo ou usuário responsável (ex: `group:devs`)
+          description: "Grupo ou usuário responsável (ex: `group:devs`)"
 
     - title: Repositório GitHub
       required:
