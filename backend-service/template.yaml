@@ -1,0 +1,69 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: fastapi-template
+  title: FastAPI Service Template
+  description: Template que gera uma aplicação básica FastAPI
+spec:
+  owner: group:devs
+  type: service
+
+  parameters:
+    - title: Informações básicas
+      required:
+        - name
+        - owner
+      properties:
+        name:
+          title: Nome da aplicação
+          type: string
+        owner:
+          title: Dono da aplicação
+          type: string
+          description: Grupo ou usuário responsável (ex: `group:devs`)
+
+    - title: Repositório GitHub
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Local do repositório
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  steps:
+    - id: fetch-base
+      name: Fetch Template
+      action: fetch:template
+      input:
+        url: ./content
+        values:
+          name: ${{ parameters.name }}
+          owner: ${{ parameters.owner }}
+
+    - id: publish
+      name: Publicar no GitHub
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: Projeto FastAPI gerado automaticamente
+        repoUrl: ${{ parameters.repoUrl }}
+        defaultBranch: main
+
+    - id: register
+      name: Registrar no catálogo
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Repositório
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Abrir no catálogo
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
