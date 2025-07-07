@@ -1,17 +1,22 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: fastapi-template
-  title: FastAPI Service Template
-  description: Template que gera uma aplicação básica FastAPI
+  name: backend-service-template
+  title: Backend Service Template
+  description: Template para criar um serviço backend com FastAPI
+  tags:
+    - recommended
+    - python
+    - fastapi
+    - backend
 spec:
-  owner: group:devs
+  owner: bonettdreans
   type: service
   parameters:
     - title: Informações do Serviço
       required:
         - name
-        - owner
+        - description
       properties:
         name:
           title: Nome do Serviço
@@ -21,17 +26,22 @@ spec:
         description:
           title: Descrição
           type: string
+          description: Descrição do que o serviço faz
         owner:
-          title: Dono da aplicação
+          title: Proprietário
           type: string
-          description: Grupo ou usuário responsável (ex: `group:devs`)
-
-    - title: Repositório GitHub
+          description: Proprietário do serviço
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+              - User
+    - title: Configurações do Repositório
       required:
         - repoUrl
       properties:
         repoUrl:
-          title: Local do repositório
+          title: URL do Repositório
           type: string
           ui:field: RepoUrlPicker
           ui:options:
@@ -39,35 +49,37 @@ spec:
               - github.com
   steps:
     - id: fetch-base
-      name: Fetch Template
+      name: Baixar estrutura
       action: fetch:template
       input:
-        url: https://github.com/bonettdreans/backstage-templates/tree/main/backend-service/content
+        url: ./content
         values:
           name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
           owner: ${{ parameters.owner }}
 
     - id: publish
-      name: Publicar GitHub
+      name: Publicar no GitHub
       action: publish:github
       input:
-        allowedHosts: ['github.com']
-        description: Projeto FastAPI gerado automaticamente
+        allowedHosts:
+          - github.com
+        description: ${{ parameters.description }}
         repoUrl: ${{ parameters.repoUrl }}
         defaultBranch: main
         gitCommitMessage: "Initial commit - Backend service ${{ parameters.name }}"
 
     - id: register
-      name: Registrar catálogo
+      name: Registrar no catálogo
       action: catalog:register
       input:
-        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: /catalog-info.yaml
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: "/catalog-info.yaml"
 
   output:
     links:
       - title: Repositório
-        url: ${{ steps['publish'].output.remoteUrl }}
+        url: ${{ steps.publish.output.remoteUrl }}
       - title: Abrir no catálogo
         icon: catalog
         entityRef: ${{ steps.register.output.entityRef }}
